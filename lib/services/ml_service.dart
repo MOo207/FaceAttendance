@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/pages/db/databse_helper.dart';
-import 'package:face_net_authentication/pages/models/user.model.dart';
+import 'package:face_net_authentication/pages/models/student.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -60,7 +60,7 @@ class MLService {
     this._predictedData = List.from(output);
   }
 
-  Future<User?> predict() async {
+  Future<Student?> predict() async {
     return _searchResult(this._predictedData);
   }
 
@@ -104,19 +104,19 @@ class MLService {
     return convertedBytes.buffer.asFloat32List();
   }
 
-  Future<User?> _searchResult(List predictedData) async {
+  Future<Student?> _searchResult(List predictedData) async {
     DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
-    List<User> users = await _dbHelper.queryAllUsers();
+    List<Student> students = await _dbHelper.queryAllStudents();
     double minDist = 999;
     double currDist = 0.0;
-    User? predictedResult;
+    Student? predictedResult;
 
-    for (User u in users) {
-      currDist = _euclideanDistance(u.modelData, predictedData);
+    for (Student stu in students) {
+      currDist = _euclideanDistance(stu.faceData, predictedData);
       if (currDist <= threshold && currDist < minDist) {
         minDist = currDist;
-        predictedResult = u;
+        predictedResult = stu;
       }
     }
     return predictedResult;

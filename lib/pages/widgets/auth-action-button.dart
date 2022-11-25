@@ -1,13 +1,15 @@
+import 'dart:math';
+
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/pages/db/databse_helper.dart';
-import 'package:face_net_authentication/pages/models/user.model.dart';
+import 'package:face_net_authentication/pages/models/student.dart';
 import 'package:face_net_authentication/pages/profile.dart';
 import 'package:face_net_authentication/pages/widgets/app_button.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart';
-import '../home.dart';
+import '../teacher_home.dart';
 import 'app_text_field.dart';
 
 class AuthActionButton extends StatefulWidget {
@@ -29,39 +31,22 @@ class _AuthActionButtonState extends State<AuthActionButton> {
 
   final TextEditingController _userTextEditingController =
       TextEditingController(text: '');
-  final TextEditingController _passwordTextEditingController =
-      TextEditingController(text: '');
 
-  User? predictedUser;
+  Student? predictedUser;
 
-  Future _signUp(context) async {
-    DatabaseHelper _databaseHelper = DatabaseHelper.instance;
-    List predictedData = _mlService.predictedData;
-    String user = _userTextEditingController.text;
-    String password = _passwordTextEditingController.text;
-    User userToSave = User(
-      user: user,
-      password: password,
-      modelData: predictedData,
-    );
-    await _databaseHelper.insert(userToSave);
-    await Future.delayed(Duration(milliseconds: 100));
+  Future _signUp(context) async {;
     this._mlService.setPredictedData([]);
-    Navigator.push(context,
-        MaterialPageRoute(builder: (BuildContext context) => MyHomePage()));
   }
 
   Future _signIn(context) async {
-    String password = _passwordTextEditingController.text;
-    if (this.predictedUser!.password == password) {
+      // attend student
       Navigator.push(
           context,
           MaterialPageRoute(
               builder: (BuildContext context) => Profile(
-                    this.predictedUser!.user,
+                    this.predictedUser!.name,
                     imagePath: _cameraService.imagePath!,
                   )));
-    } else {
       showDialog(
         context: context,
         builder: (context) {
@@ -70,11 +55,10 @@ class _AuthActionButtonState extends State<AuthActionButton> {
           );
         },
       );
-    }
   }
 
-  Future<User?> _predictUser() async {
-    User? userAndPass = await _mlService.predict();
+  Future<Student?> _predictUser() async {
+    Student? userAndPass = await _mlService.predict();
     return userAndPass;
   }
 
@@ -105,10 +89,9 @@ class _AuthActionButtonState extends State<AuthActionButton> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Colors.blue[200],
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Colors.blue.withOpacity(0.1),
+              color: Colors.blueGrey,
               blurRadius: 1,
               offset: Offset(0, 2),
             ),
@@ -116,7 +99,7 @@ class _AuthActionButtonState extends State<AuthActionButton> {
         ),
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        width: MediaQuery.of(context).size.width * 0.8,
+        width: MediaQuery.of(context).size.width * 0.6,
         height: 60,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -145,14 +128,14 @@ class _AuthActionButtonState extends State<AuthActionButton> {
           widget.isLogin && predictedUser != null
               ? Container(
                   child: Text(
-                    'Welcome back, ' + predictedUser!.user + '.',
+                    'Confirm Attending, ' + predictedUser!.name + '?',
                     style: TextStyle(fontSize: 20),
                   ),
                 )
               : widget.isLogin
                   ? Container(
                       child: Text(
-                      'User not found 😞',
+                      'Student not found 😞',
                       style: TextStyle(fontSize: 20),
                     ))
                   : Container(),
@@ -162,24 +145,17 @@ class _AuthActionButtonState extends State<AuthActionButton> {
                 !widget.isLogin
                     ? AppTextField(
                         controller: _userTextEditingController,
-                        labelText: "Your Name",
+                        labelText: "Student Name",
                       )
                     : Container(),
-                SizedBox(height: 10),
-                widget.isLogin && predictedUser == null
-                    ? Container()
-                    : AppTextField(
-                        controller: _passwordTextEditingController,
-                        labelText: "Password",
-                        isPassword: true,
-                      ),
                 SizedBox(height: 10),
                 Divider(),
                 SizedBox(height: 10),
                 widget.isLogin && predictedUser != null
                     ? AppButton(
-                        text: 'LOGIN',
+                        text: 'Attend',
                         onPressed: () async {
+
                           _signIn(context);
                         },
                         icon: Icon(
@@ -189,9 +165,26 @@ class _AuthActionButtonState extends State<AuthActionButton> {
                       )
                     : !widget.isLogin
                         ? AppButton(
-                            text: 'SIGN UP',
+                            text: 'Sign Biometric Data',
                             onPressed: () async {
+                              DatabaseHelper _databaseHelper = DatabaseHelper.instance;
+                              List predictedData = _mlService.predictedData;
+                              String name = _userTextEditingController.text;
+                              int id = Random().nextInt(99999999);
+                              Student userToSave = Student(
+                                id: id,
+                                name: name,
+                                faceData: predictedData,
+                              );
+                              int? isStudentInserted = await _databaseHelper.insertStudent(userToSave);
+                              if(isStudentInserted == id){
                               await _signUp(context);
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Student added successfully")));
+                              Navigator.pop(context);
+                              Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to sign student")));
+                              }
                             },
                             icon: Icon(
                               Icons.person_add,

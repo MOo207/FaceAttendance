@@ -21,7 +21,7 @@ class AppTextField extends StatelessWidget {
     return TextField(
       controller: this.controller,
       autofocus: this.autofocus,
-      cursorColor: Color(0xFF5BC8AA),
+      cursorColor: Colors.blueGrey,
       decoration: InputDecoration(
         floatingLabelBehavior: FloatingLabelBehavior.never,
         labelText: labelText,

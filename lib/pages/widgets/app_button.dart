@@ -4,7 +4,7 @@ class AppButton extends StatelessWidget {
   AppButton(
       {this.onPressed,
       this.text,
-      this.color = const Color(0xFF0F0BDB),
+      this.color = Colors.blueGrey,
       this.icon = const Icon(
         Icons.add,
         color: Colors.white,

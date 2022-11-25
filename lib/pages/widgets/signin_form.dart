@@ -1,37 +1,50 @@
+import 'dart:math';
+
 import 'package:face_net_authentication/locator.dart';
-import 'package:face_net_authentication/pages/models/user.model.dart';
-import 'package:face_net_authentication/pages/profile.dart';
+import 'package:face_net_authentication/pages/db/databse_helper.dart';
+import 'package:face_net_authentication/pages/models/attendance.dart';
+import 'package:face_net_authentication/pages/models/lecture.dart';
+import 'package:face_net_authentication/pages/models/student.dart';
 import 'package:face_net_authentication/pages/widgets/app_button.dart';
-import 'package:face_net_authentication/pages/widgets/app_text_field.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:flutter/material.dart';
 
-class SignInSheet extends StatelessWidget {
-  SignInSheet({Key? key, required this.user}) : super(key: key);
-  final User user;
+class AttendByBiometricDataSheet extends StatefulWidget {
+  Lecture? lecture;
+  final Student student;
+  AttendByBiometricDataSheet(
+      {Key? key, required this.student, required this.lecture})
+      : super(key: key);
 
-  final _passwordController = TextEditingController();
+  @override
+  State<AttendByBiometricDataSheet> createState() =>
+      _AttendByBiometricDataSheetState();
+}
+
+class _AttendByBiometricDataSheetState
+    extends State<AttendByBiometricDataSheet> {
   final _cameraService = locator<CameraService>();
 
-  Future _signIn(context, user) async {
-    if (user.password == _passwordController.text) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) => Profile(
-                    user.user,
-                    imagePath: _cameraService.imagePath!,
-                  )));
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            content: Text('Wrong password!'),
-          );
-        },
-      );
-    }
+  Future _signIn(context) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text("Person attendance has been marked!"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+              child: Text("OK"),
+            )
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -44,7 +57,7 @@ class SignInSheet extends StatelessWidget {
         children: [
           Container(
             child: Text(
-              'Welcome back, ' + user.user + '.',
+              'Confirm Attend, ' + widget.student.name + '?',
               style: TextStyle(fontSize: 20),
             ),
           ),
@@ -52,18 +65,28 @@ class SignInSheet extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(height: 10),
-                AppTextField(
-                  controller: _passwordController,
-                  labelText: "Password",
-                  isPassword: true,
-                ),
-                SizedBox(height: 10),
                 Divider(),
                 SizedBox(height: 10),
                 AppButton(
-                  text: 'LOGIN',
+                  text: 'Confirm',
                   onPressed: () async {
-                    _signIn(context, user);
+                    DatabaseHelper _databaseHelper = DatabaseHelper.instance;
+                    // attend student
+                    Attendance attendance = Attendance(
+                        id: Random().nextInt(99999999),
+                        studentId: widget.student.id,
+                        time: DateTime.now(),
+                        isAttended: 1,
+                        lectureId: widget.lecture!.id!);
+                    bool isAttended =
+                        await _databaseHelper.attendStudent(attendance);
+                    if (isAttended) {
+                      await _signIn(context);
+                      setState(() {});
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Attending failed")));
+                    }
                   },
                   icon: Icon(
                     Icons.login,

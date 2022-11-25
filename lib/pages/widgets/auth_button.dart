@@ -11,10 +11,10 @@ class AuthButton extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Color(0xFF0F0BDB),
+          color: Colors.blueGrey,
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Colors.blue.withOpacity(0.1),
+              color: Colors.blueGrey.withOpacity(0.1),
               blurRadius: 1,
               offset: Offset(0, 2),
             ),
@@ -22,7 +22,7 @@ class AuthButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         padding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        width: MediaQuery.of(context).size.width * 0.8,
+        width: MediaQuery.of(context).size.width * 0.6,
         height: 60,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

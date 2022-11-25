@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:face_net_authentication/pages/widgets/app_button.dart';
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'teacher_home.dart';
 
 class Profile extends StatelessWidget {
   const Profile(this.username, {Key? key, required this.imagePath})
@@ -34,7 +34,7 @@ class Profile extends StatelessWidget {
                   ),
                   Text(
                     'Hi ' + username + '!',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600,),
                   ),
                 ],
               ),
@@ -44,7 +44,7 @@ class Profile extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MyHomePage()),
+                    MaterialPageRoute(builder: (context) => TeacherHome()),
                   );
                 },
                 icon: Icon(

@@ -12,14 +12,14 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
-class SignUp extends StatefulWidget {
-  const SignUp({Key? key}) : super(key: key);
+class AddBiometricData extends StatefulWidget {
+  const AddBiometricData({Key? key}) : super(key: key);
 
   @override
-  SignUpState createState() => SignUpState();
+  AddBiometricDataState createState() => AddBiometricDataState();
 }
 
-class SignUpState extends State<SignUp> {
+class AddBiometricDataState extends State<AddBiometricData> {
   String? imagePath;
   Face? faceDetected;
   Size? imageSize;
@@ -52,6 +52,14 @@ class SignUpState extends State<SignUp> {
   _start() async {
     setState(() => _initializing = true);
     await _cameraService.initialize();
+    setState(() => _initializing = false);
+
+    _frameFaces();
+  }
+
+  _toggle() async {
+    setState(() => _initializing = true);
+    await _cameraService.toggleCamera();
     setState(() => _initializing = false);
 
     _frameFaces();
@@ -197,18 +205,35 @@ class SignUpState extends State<SignUp> {
           children: [
             body,
             CameraHeader(
-              "SIGN UP",
+              "Take Biometric Data",
               onBackPressed: _onBackPressed,
             )
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: !_bottomSheetVisible
-            ? AuthActionButton(
-                onPressed: onShot,
-                isLogin: false,
-                reload: _reload,
-              )
-            : Container());
+        floatingActionButton: Row(children: [
+           // switch camera button
+              !_bottomSheetVisible
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 20.0),
+                  child: FloatingActionButton(
+                    heroTag: "switchCamera",
+                    onPressed: () async{
+                      _toggle();
+                    },
+                    child: Icon(Icons.switch_camera, color: Colors.white),
+                  ),
+                ) : Container(),
+          SizedBox(width: 10,),
+          !_bottomSheetVisible
+              ? AuthActionButton(
+                  onPressed: onShot,
+                  isLogin: false,
+                  reload: _reload,
+                )
+              : Container(),
+
+             
+        ]));
   }
 }

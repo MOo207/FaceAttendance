@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:face_net_authentication/locator.dart';
-import 'package:face_net_authentication/pages/models/user.model.dart';
+import 'package:face_net_authentication/pages/models/lecture.dart';
+import 'package:face_net_authentication/pages/models/student.dart';
 import 'package:face_net_authentication/pages/widgets/auth_button.dart';
 import 'package:face_net_authentication/pages/widgets/camera_detection_preview.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
@@ -12,14 +13,15 @@ import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-class SignIn extends StatefulWidget {
-  const SignIn({Key? key}) : super(key: key);
+class AttendByBiometricData extends StatefulWidget {
+  final Lecture? lecture;
+  const AttendByBiometricData({Key? key, required this.lecture}) : super(key: key);
 
   @override
-  SignInState createState() => SignInState();
+  AttendByBiometricDataState createState() => AttendByBiometricDataState();
 }
 
-class SignInState extends State<SignIn> {
+class AttendByBiometricDataState extends State<AttendByBiometricData> {
   CameraService _cameraService = locator<CameraService>();
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
   MLService _mlService = locator<MLService>();
@@ -28,6 +30,8 @@ class SignInState extends State<SignIn> {
 
   bool _isPictureTaken = false;
   bool _isInitializing = false;
+
+  bool isFront = true;
 
   @override
   void initState() {
@@ -47,6 +51,14 @@ class SignInState extends State<SignIn> {
     setState(() => _isInitializing = true);
     await _cameraService.initialize();
     setState(() => _isInitializing = false);
+    _frameFaces();
+  }
+
+  _toggle() async {
+    setState(() => _isInitializing = true);
+    await _cameraService.toggleCamera();
+    setState(() => _isInitializing = false);
+
     _frameFaces();
   }
 
@@ -91,20 +103,13 @@ class SignInState extends State<SignIn> {
     _start();
   }
 
-  Future<void> onTap() async {
+Future<void> onTap() async {
     await takePicture();
     if (_faceDetectorService.faceDetected) {
-      User? user = await _mlService.predict();
-      if(user != null) {
+      Student? student = await _mlService.predict();
        var bottomSheetController = scaffoldKey.currentState!
-          .showBottomSheet((context) => signInSheet(user: user));
+          .showBottomSheet((context) => signInSheet(student: student, lecture: widget.lecture));
       bottomSheetController.closed.whenComplete(_reload);
-      } else {
-        showDialog(
-            context: context,
-            builder: (context) =>
-                AlertDialog(content: Text('No user found!')));
-      }
     }
   }
 
@@ -117,10 +122,8 @@ class SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
-    Widget header = CameraHeader("LOGIN", onBackPressed: _onBackPressed);
+    Widget header = CameraHeader("Attend", onBackPressed: _onBackPressed);
     Widget body = getBodyWidget();
-    Widget? fab;
-    if (!_isPictureTaken) fab = AuthButton(onTap: onTap);
 
     return Scaffold(
       key: scaffoldKey,
@@ -128,18 +131,31 @@ class SignInState extends State<SignIn> {
         children: [body, header],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: fab,
+      floatingActionButton: !_isPictureTaken? Row(children: [
+            Padding(
+                  padding: const EdgeInsets.only(left: 20.0),
+                  child: FloatingActionButton(
+                    heroTag: "switchCamera",
+                    onPressed: () async{
+                      _toggle();
+                    },
+                    child: Icon(Icons.switch_camera, color: Colors.white),
+                  ),
+                ),
+          SizedBox(width: 10,),
+         AuthButton(onTap: onTap)
+      ]): Container(),
     );
   }
 
-  signInSheet({@required User? user}) => user == null
+  signInSheet({@required Student? student, @required Lecture? lecture}) => student == null
       ? Container(
           width: MediaQuery.of(context).size.width,
           padding: EdgeInsets.all(20),
           child: Text(
-            'User not found 😞',
+            'Person not found 😞',
             style: TextStyle(fontSize: 20),
           ),
         )
-      : SignInSheet(user: user);
+      : AttendByBiometricDataSheet(student: student, lecture: lecture,);
 }

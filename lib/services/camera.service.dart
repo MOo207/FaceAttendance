@@ -25,7 +25,21 @@ class CameraService {
   Future<CameraDescription> _getCameraDescription() async {
     List<CameraDescription> cameras = await availableCameras();
     return cameras.firstWhere((CameraDescription camera) =>
-        camera.lensDirection == CameraLensDirection.back);
+        camera.lensDirection == CameraLensDirection.front);
+  }
+
+// toggle camera lens
+  Future<void> toggleCamera() async {
+    final lensDirection =  _cameraController!.description.lensDirection;
+    final newLensDirection = lensDirection == CameraLensDirection.back
+        ? CameraLensDirection.front
+        : CameraLensDirection.back;
+    final cameras = await availableCameras();
+    final newDescription = cameras.firstWhere(
+      (CameraDescription description) =>
+          description.lensDirection == newLensDirection,
+    );
+    await _setupCameraController(description: newDescription);
   }
 
   Future _setupCameraController({
@@ -69,6 +83,7 @@ class CameraService {
       _cameraController!.value.previewSize!.width,
     );
   }
+
 
   dispose() async {
     await this._cameraController?.dispose();
