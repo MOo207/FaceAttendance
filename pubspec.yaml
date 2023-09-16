@@ -36,6 +36,8 @@ dependencies:
   image: ^3.0.2
   sqflite: ^2.1.0+1
   get_it: ^7.2.0
+  csv: ^5.0.2
+  open_file: ^3.3.2
 
 dev_dependencies:
   flutter_test:

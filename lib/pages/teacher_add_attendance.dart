@@ -4,6 +4,7 @@ import 'package:face_net_authentication/pages/models/attendance.dart';
 import 'package:face_net_authentication/pages/models/lecture.dart';
 import 'package:face_net_authentication/pages/models/student.dart';
 import 'package:face_net_authentication/pages/models/teacher.dart';
+import 'package:face_net_authentication/services/export_service.dart';
 import 'package:flutter/material.dart';
 
 class TeacherAddAttendance extends StatefulWidget {
@@ -30,6 +31,32 @@ class _TeacherAddAttendanceState extends State<TeacherAddAttendance> {
     return Scaffold(
         appBar: AppBar(
           title: Text('Add Attendance'),
+          actions: [
+            // export to csv button
+            IconButton(
+              icon: Icon(Icons.file_download),
+              onPressed: () async {
+                ExportService exportService = ExportService();
+                List<Student> students = await studentsFuture;
+                // Define the CSV header
+    final       List<String> header = ['ID', 'NAME', 'TIME', 'ATTENDANCE'];
+                List<List<dynamic>> attendances = [];
+                for (Student student in students) {
+                  Attendance? attendance =
+                      await helper.getAttendanceByStudentIdAndLectureId(
+                          student.id, widget.lecture!.id!);
+                  if (attendance != null) {
+                    // write each attendence as alist of list of strings
+                    attendances.add([attendance.studentId, student.name, attendance.time, "PRESENT"]);
+                  } else{
+                      attendances.add([student.id, student.name, "NONE", "ABSENT"]);
+                  }
+                }
+                print(attendances);
+                await exportService.writeDataToCSV(attendances);
+              },
+            ),
+          ],
         ),
         body: FutureBuilder<List<Student>>(
           future: studentsFuture,
